@@ -1,4 +1,34 @@
-import { supabase, successNotification, errorNotification } from "../main";
+import { supabase } from "../main";
+// !! functionality for notification
+// Success Notification
+function successNotification(message, seconds = 0) {
+  document.querySelector(".alert-success").classList.remove("d-none");
+  document.querySelector(".alert-success").classList.add("d-block");
+  document.querySelector(".alert-success").innerHTML = message;
+
+  if (seconds != 0) {
+    setTimeout(function () {
+      document.querySelector(".alert-success").classList.remove("d-block");
+      document.querySelector(".alert-success").classList.add("d-none");
+    }, seconds * 1000);
+  }
+}
+
+// Error Notification
+function errorNotification(message, seconds = 0) {
+  document.querySelector(".alert-danger").classList.remove("d-none");
+  document.querySelector(".alert-danger").classList.add("d-block");
+  document.querySelector(".alert-danger").innerHTML = message;
+
+  if (seconds != 0) {
+    setTimeout(function () {
+      document.querySelector(".alert-danger").classList.remove("d-block");
+      document.querySelector(".alert-danger").classList.add("d-none");
+    }, seconds * 1000);
+  }
+}
+
+// !! end of functionality
 
 const form_login = document.getElementById("form_login");
 
@@ -20,17 +50,35 @@ form_login.onsubmit = async (e) => {
     password: formData.get("password"),
   });
 
+  let session = data.session;
+  let user = data.user;
+
+  // !! storing token
+  if (session != null) {
+    localStorage.setItem("access_token", session.access_token);
+    localStorage.setItem("refresh_token", session.refresh_token);
+
+    // !! get role
+    let { data: user_info, error } = await supabase
+      .from("user_info")
+      .select("role")
+      .eq("user_id", user.id);
+    console.log(user_info);
+    // !! store role
+    localStorage.setItem("role", user_info.role);
+  }
+
   //   !! notifcation
   if (error == null) {
     successNotification("Log in successful!", 3);
-    setTimeout(function() { //!! add timer
+    setTimeout(function () {
+      //!! add timer
       window.location.pathname = "/index.html";
     }, 3000); // 3000 milliseconds = 3 seconds
   } else {
     errorNotification("Something went wrong, please try again later.", 10);
     console.log(error);
   }
-  
 
   //!! Reset Form
   form_login.reset();
@@ -38,5 +86,4 @@ form_login.onsubmit = async (e) => {
   //!! Enable Submit Button
   document.querySelector("#form_login button").disabled = false;
   document.querySelector("#form_login button").innerHTML = `Log in`;
-  
 };
